@@ -1,25 +1,34 @@
 package com.example.assistant.service;
 
+import com.example.assistant.model.Note;
+import com.example.assistant.repository.NoteRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class NoteService {
-    private final Map<Long, List<String>> userNotes = new HashMap<>();
 
-    public void addNote(Long chatId, String note) {
-        userNotes.computeIfAbsent(chatId, k -> new ArrayList<>()).add(note);
+    private final NoteRepository noteRepository;
+
+    public void addNote(Long chatId, String text) {
+        Note note = Note.builder()
+                .chatId(chatId)
+                .text(text)
+                .build();
+        noteRepository.save(note);
     }
 
-    public List<String> getNotes(Long chatId) {
-        return userNotes.getOrDefault(chatId, Collections.emptyList());
+    public List<Note> getNotes(Long chatId) {
+        return noteRepository.findAllByChatId(chatId);
     }
 
     public boolean deleteNote(Long chatId, int index) {
-        List<String> notes = userNotes.get(chatId);
-        if (notes != null && index >= 0 && index < notes.size()) {
-            notes.remove(index);
+        List<Note> notes = noteRepository.findAllByChatId(chatId);
+        if (index >= 0 && index < notes.size()) {
+            noteRepository.delete(notes.get(index));
             return true;
         }
         return false;
